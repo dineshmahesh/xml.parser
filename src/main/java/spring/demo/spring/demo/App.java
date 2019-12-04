@@ -1,5 +1,6 @@
 package spring.demo.spring.demo;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -13,6 +14,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 import spring.demo.spring.demo.model.Service;
 
@@ -50,5 +56,17 @@ public class App {
 	    	System.out.println(protocol + ": " + serviceList);
     	});
     	System.out.println(duplicatedServicesMap);
+    	
+    	CSVWriter writer = new CSVWriter(new FileWriter("service.csv"));
+    	StatefulBeanToCsv<Service> beanToCsv = new StatefulBeanToCsvBuilder<Service>(writer).build();
+        try {
+			beanToCsv.write(duplicatedServicesMap.get(protocols.get(0)));
+			beanToCsv.write(duplicatedServicesMap.get(protocols.get(1)));
+		} catch (CsvDataTypeMismatchException e) {
+			e.printStackTrace();
+		} catch (CsvRequiredFieldEmptyException e) {
+			e.printStackTrace();
+		}
+        writer.close();
     }
 }
