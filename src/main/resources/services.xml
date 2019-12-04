@@ -6,7 +6,7 @@
 	
 	<service profile="2" name="www">
 		<port protocol="tcp" port-number="80"/>
-		<port protocol="udp" port-number="80"/>
+		<port protocol="udp" port-number="81"/>
 	</service>
 	
 	<service profile="5" name="ftp">
