@@ -14,12 +14,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.opencsv.CSVWriter;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
+import spring.demo.spring.demo.model.Port;
 import spring.demo.spring.demo.model.Service;
 
 public class App {
@@ -30,7 +26,6 @@ public class App {
     	InputStream inputStream = App.class.getClassLoader().getResourceAsStream("services.xml");
     	TypeReference<List<Service>> typeReference = new TypeReference<List<Service>>() {};
     	List<Service> services = objectMapper.readValue(inputStream, typeReference);
-//    	System.out.println(services);
     	
     	Map<String, List<Service>> duplicatedServicesMap = new HashMap<String, List<Service>>();
 
@@ -56,17 +51,32 @@ public class App {
 	    	System.out.println(protocol + ": " + serviceList);
     	});
     	System.out.println(duplicatedServicesMap);
+
+    	List<String> headers = Arrays.asList("Name", "Profile", "Port/Protocol", "Duplicated In");
+    	FileWriter writer = new FileWriter("service.csv");
+    	CSVUtils.writeRow(writer, headers);
+
+    	List<String> row;
+    	for (String protocol : protocols) {
+    		for (Service service : duplicatedServicesMap.get(protocol)) {
+    			row = new ArrayList<String>();
+    			row.add(service.getName());
+    			row.add(String.valueOf(service.getProfile()));
+    			StringBuilder portsBuilder = new StringBuilder();
+    			boolean firstPort = true;
+    			for (Port port : service.getPort()) {
+    				portsBuilder.append(port.getNumber()).append("/").append(port.getProtocol());
+    				if (firstPort)
+    					portsBuilder.append(" ");
+    				firstPort = false;
+    			}
+
+    			row.add(portsBuilder.toString());
+    			row.add(protocol);
+    			CSVUtils.writeRow(writer, row);
+    		}
+    	}
     	
-    	CSVWriter writer = new CSVWriter(new FileWriter("service.csv"));
-    	StatefulBeanToCsv<Service> beanToCsv = new StatefulBeanToCsvBuilder<Service>(writer).build();
-        try {
-			beanToCsv.write(duplicatedServicesMap.get(protocols.get(0)));
-			beanToCsv.write(duplicatedServicesMap.get(protocols.get(1)));
-		} catch (CsvDataTypeMismatchException e) {
-			e.printStackTrace();
-		} catch (CsvRequiredFieldEmptyException e) {
-			e.printStackTrace();
-		}
-        writer.close();
+    	writer.close();
     }
 }
